@@ -108,6 +108,13 @@
           "on": "mdi:alert-circle",
           "off": "mdi:check-circle-outline"
         }
+      },
+      "pellet_empty": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "on": "mdi:alert-circle",
+          "off": "mdi:check-circle-outline"
+        }
       }
     },
     "sensor": {

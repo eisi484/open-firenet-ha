@@ -68,7 +68,14 @@ BINARY_SENSOR_TYPES: tuple[OpenFirenetBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         icon="mdi:alert-circle-outline",
         optional=True,
-        value_fn=lambda data: bool(data.get("pellet", {}).get("low_level", False)) if data.get("pellet", {}).get("available") else None,
+        value_fn=lambda data: (bool(data.get("pellet", {}).get("low_level", False)) or data.get("stove", {}).get("error_code") == 1) if data.get("pellet", {}).get("available") else None,
+    ),
+    OpenFirenetBinarySensorDescription(
+        key="pellet_empty",
+        name="Pellet Hopper Empty",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        icon="mdi:alert-circle-outline",
+        value_fn=lambda data: data.get("stove", {}).get("error_code") == 1,
     ),
 )
 

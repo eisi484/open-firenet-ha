@@ -145,3 +145,18 @@ async def test_pellet_level_sensors_not_created_when_not_available(hass, bridge)
     assert _entity_id(hass, entry, "sensor", "sensor_pellet_remaining_kg") is None
     assert _entity_id(hass, entry, "sensor", "sensor_pellet_distance_cm") is None
     assert _entity_id(hass, entry, "binary_sensor", "pellet_low") is None
+
+
+async def test_pellet_empty_binary_sensor(hass, bridge):
+    bridge.state["stove"]["error_code"] = 0
+    entry = await _setup(hass, bridge)
+    assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_empty")).state == "off"
+
+
+async def test_pellet_empty_binary_sensor_when_error_code_1(hass, bridge):
+    bridge.state["stove"]["error_code"] = 1
+    bridge.state["pellet"] = {"available": True, "low_level": False}
+    entry = await _setup(hass, bridge)
+    assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_empty")).state == "on"
+    assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_low")).state == "on"
+

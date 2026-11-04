@@ -89,6 +89,9 @@
       },
       "pellet_low": {
         "name": "Pellet Level Low"
+      },
+      "pellet_empty": {
+        "name": "Pellet Hopper Empty"
       }
     },
     "fan": {

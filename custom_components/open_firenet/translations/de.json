@@ -89,6 +89,9 @@
       },
       "pellet_low": {
         "name": "Pellet-Füllstand niedrig"
+      },
+      "pellet_empty": {
+        "name": "Pelletbehälter leer"
       }
     },
     "fan": {

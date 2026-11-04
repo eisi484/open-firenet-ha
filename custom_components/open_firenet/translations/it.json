@@ -89,6 +89,9 @@
       },
       "pellet_low": {
         "name": "Livello pellet basso"
+      },
+      "pellet_empty": {
+        "name": "Serbatoio pellet vuoto"
       }
     },
     "fan": {

@@ -129,8 +129,9 @@ The **Install** button downloads the release, checks its signature and checksum,
 | `binary_sensor.open_firenet_combustion_active` | Combustion Active | — | Stove is actively burning pellets / flame present |
 | `binary_sensor.open_firenet_stove_error` | Stove Error | `problem` | Stove reports an error state |
 | `binary_sensor.open_firenet_pellet_hopper_lid` | Pellet Hopper Lid | `door` | Open (`on`) when pellet hopper lid is raised |
+| `binary_sensor.open_firenet_pellet_hopper_empty` | Pellet Hopper Empty | `problem` | `on` when stove reports hopper is empty (`error_code == 1`) |
 | `binary_sensor.open_firenet_eco_mode_possible` | Eco Mode Possible | — | `on` when the stove says its eco mode is possible *(Diagnostic; stoves that have an eco mode)* |
-| `binary_sensor.open_firenet_pellet_level_low` | Pellet Level Low | `problem` | `on` when pellet fill level falls below the configured low fuel threshold *(optional VL53L0X sensor)* |
+| `binary_sensor.open_firenet_pellet_level_low` | Pellet Level Low | `problem` | `on` when pellet fill level falls below the configured low fuel threshold *(optional VL53L0X sensor)* or when hopper is empty |
 
 ### Sensors
 | Entity ID | Name | Unit | Description |

@@ -5,6 +5,7 @@
 ### New
 - The bridge's **MAC address** is recorded in its device information, next to its identifiers, as other integrations do for their devices.
 - **Pellet Level** (%), **Pellets Remaining** (kg), and **Pellet Level Distance** (cm) sensors, plus a **Pellet Level Low** binary sensor, for stoves equipped with the optional VL53L0X Time-of-Flight pellet level sensor. The entities are created only when the bridge reports the pellet sensor as available.
+- **Pellet Hopper Empty** binary sensor (`binary_sensor.open_firenet_pellet_empty`) triggered when the stove reports error code 1 ("Pelletbehälter leer" / hopper empty).
 
 ## v2.17.0 (2026-11-02)
 

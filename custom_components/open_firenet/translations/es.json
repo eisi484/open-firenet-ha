@@ -89,6 +89,9 @@
       },
       "pellet_low": {
         "name": "Nivel de pellets bajo"
+      },
+      "pellet_empty": {
+        "name": "Depósito de pellets vacío"
       }
     },
     "fan": {

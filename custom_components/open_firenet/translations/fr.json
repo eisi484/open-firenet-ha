@@ -89,6 +89,9 @@
       },
       "pellet_low": {
         "name": "Niveau de pellets bas"
+      },
+      "pellet_empty": {
+        "name": "Réservoir de pellets vide"
       }
     },
     "fan": {
