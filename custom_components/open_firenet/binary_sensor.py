@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,7 +21,8 @@ from .coordinator import OpenFirenetCoordinator
 
 @dataclass(frozen=True, kw_only=True)
 class OpenFirenetBinarySensorDescription(BinarySensorEntityDescription):
-    value_fn: Callable[[dict[str, Any]], bool]
+    value_fn: Callable[[dict[str, Any]], bool | None]
+    optional: bool = False
 
 
 BINARY_SENSOR_TYPES: tuple[OpenFirenetBinarySensorDescription, ...] = (
@@ -60,6 +62,14 @@ BINARY_SENSOR_TYPES: tuple[OpenFirenetBinarySensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: bool(data.get("controls", {}).get("eco_mode_possible", False)),
     ),
+    OpenFirenetBinarySensorDescription(
+        key="pellet_low",
+        name="Pellet Level Low",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        icon="mdi:alert-circle-outline",
+        optional=True,
+        value_fn=lambda data: bool(data.get("pellet", {}).get("low_level", False)) if data.get("pellet", {}).get("available") else None,
+    ),
 )
 
 
@@ -79,10 +89,19 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     coordinator: OpenFirenetCoordinator = hass.data[DOMAIN][entry.entry_id]
+    registry = er.async_get(hass)
+
+    def _offered(description: OpenFirenetBinarySensorDescription) -> bool:
+        if not description.optional or description.value_fn(coordinator.data) is not None:
+            return True
+        unique_id = f"{entry.entry_id}_{description.key}"
+        return registry.async_get_entity_id("binary_sensor", DOMAIN, unique_id) is not None
+
     async_add_entities(
         [
             OpenFirenetBinarySensor(coordinator, entry, description)
             for description in BINARY_SENSOR_TYPES
+            if _offered(description)
         ]
         + [OpenFirenetSchedulePendingSensor(coordinator, entry, SCHEDULE_PENDING)]
     )
@@ -121,7 +140,7 @@ class OpenFirenetBinarySensor(
         }
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         return self.entity_description.value_fn(self.coordinator.data)
 
 

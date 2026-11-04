@@ -86,6 +86,9 @@
       },
       "eco_mode_possible": {
         "name": "Eco-Modus möglich"
+      },
+      "pellet_low": {
+        "name": "Pellet-Füllstand niedrig"
       }
     },
     "fan": {
@@ -204,6 +207,15 @@
       },
       "warning_code": {
         "name": "Warncode"
+      },
+      "pellet_level_percent": {
+        "name": "Pellet-Füllstand"
+      },
+      "pellet_remaining_kg": {
+        "name": "Verbleibende Pellets"
+      },
+      "pellet_distance_cm": {
+        "name": "Pellet-Füllstand Distanz"
       }
     },
     "time": {

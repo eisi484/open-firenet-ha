@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfLength,
     UnitOfMass,
     UnitOfTemperature,
     UnitOfTime,
@@ -234,6 +235,35 @@ SENSOR_TYPES: tuple[OpenFirenetSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda data: data.get("device", {}).get("uptime_seconds"),
+    ),
+    OpenFirenetSensorEntityDescription(
+        key="pellet_level_percent",
+        name="Pellet Level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:gauge",
+        optional=True,
+        value_fn=lambda data: data.get("pellet", {}).get("level_percent") if data.get("pellet", {}).get("available") else None,
+    ),
+    OpenFirenetSensorEntityDescription(
+        key="pellet_remaining_kg",
+        name="Pellets Remaining",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:weight-kilogram",
+        optional=True,
+        value_fn=lambda data: data.get("pellet", {}).get("remaining_kg") if data.get("pellet", {}).get("available") else None,
+    ),
+    OpenFirenetSensorEntityDescription(
+        key="pellet_distance_cm",
+        name="Pellet Level Distance",
+        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:ruler",
+        optional=True,
+        value_fn=lambda data: data.get("pellet", {}).get("distance_cm") if data.get("pellet", {}).get("available") else None,
     ),
 )
 

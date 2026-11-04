@@ -119,3 +119,29 @@ async def test_insertion_motor_sensors_not_created_when_not_reported(hass, bridg
     entry = await _setup(hass, bridge)
     assert _entity_id(hass, entry, "sensor", "sensor_insertion_motor") is None
     assert _entity_id(hass, entry, "sensor", "sensor_insertion_motor_current") is None
+
+
+async def test_pellet_level_sensors_when_available(hass, bridge):
+    bridge.state["pellet"] = {
+        "available": True,
+        "level_percent": 29.9,
+        "remaining_kg": 13.5,
+        "distance_cm": 49.2,
+        "raw_distance_mm": 492,
+        "low_level": True,
+        "error_count": 0,
+    }
+    entry = await _setup(hass, bridge)
+
+    assert hass.states.get(_entity_id(hass, entry, "sensor", "sensor_pellet_level_percent")).state == "29.9"
+    assert hass.states.get(_entity_id(hass, entry, "sensor", "sensor_pellet_remaining_kg")).state == "13.5"
+    assert hass.states.get(_entity_id(hass, entry, "sensor", "sensor_pellet_distance_cm")).state == "49.2"
+    assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_low")).state == "on"
+
+
+async def test_pellet_level_sensors_not_created_when_not_available(hass, bridge):
+    entry = await _setup(hass, bridge)
+    assert _entity_id(hass, entry, "sensor", "sensor_pellet_level_percent") is None
+    assert _entity_id(hass, entry, "sensor", "sensor_pellet_remaining_kg") is None
+    assert _entity_id(hass, entry, "sensor", "sensor_pellet_distance_cm") is None
+    assert _entity_id(hass, entry, "binary_sensor", "pellet_low") is None

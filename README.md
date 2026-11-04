@@ -130,6 +130,7 @@ The **Install** button downloads the release, checks its signature and checksum,
 | `binary_sensor.open_firenet_stove_error` | Stove Error | `problem` | Stove reports an error state |
 | `binary_sensor.open_firenet_pellet_hopper_lid` | Pellet Hopper Lid | `door` | Open (`on`) when pellet hopper lid is raised |
 | `binary_sensor.open_firenet_eco_mode_possible` | Eco Mode Possible | — | `on` when the stove says its eco mode is possible *(Diagnostic; stoves that have an eco mode)* |
+| `binary_sensor.open_firenet_pellet_level_low` | Pellet Level Low | `problem` | `on` when pellet fill level falls below the configured low fuel threshold *(optional VL53L0X sensor)* |
 
 ### Sensors
 | Entity ID | Name | Unit | Description |
@@ -147,6 +148,9 @@ The **Install** button downloads the release, checks its signature and checksum,
 | `sensor.open_firenet_air_flaps` / `_air_flaps_target` | Air Flaps / Air Flaps Target | % | Position of the air flaps and the position asked for *(stoves that report them)* |
 | `sensor.open_firenet_wifi_signal_strength` | WiFi Signal Strength | dBm | Open Firenet bridge RSSI |
 | `sensor.open_firenet_uptime` | Uptime | s | ESP32 uptime in seconds |
+| `sensor.open_firenet_pellet_level` | Pellet Level | % | Pellet hopper fill level percentage *(optional VL53L0X sensor)* |
+| `sensor.open_firenet_pellets_remaining` | Pellets Remaining | kg | Estimated remaining mass of pellets in hopper *(optional VL53L0X sensor)* |
+| `sensor.open_firenet_pellet_level_distance` | Pellet Level Distance | cm | Measured distance from sensor to pellets *(optional VL53L0X sensor)* |
 
 ---
 

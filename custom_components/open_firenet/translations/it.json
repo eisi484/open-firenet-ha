@@ -86,6 +86,9 @@
       },
       "eco_mode_possible": {
         "name": "Modalità eco possibile"
+      },
+      "pellet_low": {
+        "name": "Livello pellet basso"
       }
     },
     "fan": {
@@ -204,6 +207,15 @@
       },
       "warning_code": {
         "name": "Codice di avviso"
+      },
+      "pellet_level_percent": {
+        "name": "Livello pellet"
+      },
+      "pellet_remaining_kg": {
+        "name": "Pellet rimanenti"
+      },
+      "pellet_distance_cm": {
+        "name": "Distanza livello pellet"
       }
     },
     "time": {

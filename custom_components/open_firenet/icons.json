@@ -101,6 +101,13 @@
           "on": "mdi:tray-arrow-up",
           "off": "mdi:tray-arrow-down"
         }
+      },
+      "pellet_low": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "on": "mdi:alert-circle",
+          "off": "mdi:check-circle-outline"
+        }
       }
     },
     "sensor": {
@@ -145,6 +152,15 @@
       },
       "uptime_seconds": {
         "default": "mdi:clock-outline"
+      },
+      "pellet_level_percent": {
+        "default": "mdi:gauge"
+      },
+      "pellet_remaining_kg": {
+        "default": "mdi:weight-kilogram"
+      },
+      "pellet_distance_cm": {
+        "default": "mdi:ruler"
       }
     }
   }

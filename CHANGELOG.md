@@ -4,6 +4,7 @@
 
 ### New
 - The bridge's **MAC address** is recorded in its device information, next to its identifiers, as other integrations do for their devices.
+- **Pellet Level** (%), **Pellets Remaining** (kg), and **Pellet Level Distance** (cm) sensors, plus a **Pellet Level Low** binary sensor, for stoves equipped with the optional VL53L0X Time-of-Flight pellet level sensor. The entities are created only when the bridge reports the pellet sensor as available.
 
 ## v2.17.0 (2026-11-02)
 
