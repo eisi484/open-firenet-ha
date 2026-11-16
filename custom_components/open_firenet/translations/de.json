@@ -103,6 +103,9 @@
       }
     },
     "switch": {
+      "power": {
+        "name": "Betrieb"
+      },
       "heating_schedule": {
         "name": "Heizzeiten"
       },
@@ -139,6 +142,9 @@
     "sensor": {
       "room_temperature": {
         "name": "Raumtemperatur"
+      },
+      "target_temperature": {
+        "name": "Solltemperatur"
       },
       "combustion_temperature": {
         "name": "Brennraumtemperatur"

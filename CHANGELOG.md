@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.20.0 (2026-11-16)
+
+### New
+- A **Power** switch turns the stove on or off, as the thermostat does, so that custom cards and automations can use it directly. By @openfirenet, suggested by @LarrxX. (#81)
+- A **Target Temperature** sensor gives the target room temperature of the comfort mode, so that it can be graphed with the room temperature. By @openfirenet, suggested by @LarrxX. (#81)
+
+## v2.19.1 (2026-11-15)
+
+### Fixes
+- MultiAir on ANIMO stoves: the MultiAir fans and settings are created for the ANIMO AVITO, PURE and ADUO, which ANIMO sells with MultiAir as an option, and no longer for the other ANIMO models whose number matched a RIKA MultiAir model (the ADEVO was taken for a ROCO MULTIAIR). The MultiAir option of the integration still works for any other stove. By @openfirenet.
+
+## v2.19.0 (2026-11-15)
+
+### New
+- Bridge updates install the firmware matching the bridge: the PSRAM version on a bridge with octal PSRAM (8 or 16 MB), also when it still runs the standard one, and the standard version otherwise. Bridges with quad PSRAM (2 MB) are not supported by the PSRAM version and keep the standard one. When a release has no PSRAM files, the standard version is installed. The bridge needs firmware 5.0 to tell its PSRAM. By @openfirenet.
+
 ## v2.18.0 (2026-11-05)
 
 ### New

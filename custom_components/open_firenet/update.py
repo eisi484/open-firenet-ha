@@ -71,6 +71,19 @@ async def async_setup_entry(
     async_add_entities([OpenFirenetFirmwareUpdate(coordinator, entry)], update_before_add=True)
 
 
+
+def _psram_build_supported(device: dict) -> bool:
+    """Whether the bridge's PSRAM suits the PSRAM build: octal PSRAM of 8 or 16 MB.
+
+    Quad PSRAM (2 MB chips) cannot be used by that build, so those bridges keep the standard one. The bridge says so
+    in `psram_build_supported`; without that field, the size of its PSRAM decides.
+    """
+    supported = device.get("psram_build_supported")
+    if isinstance(supported, bool):
+        return supported
+    size = device.get("hardware_psram_size") or 0
+    return device.get("hardware_psram") is True and isinstance(size, int) and size >= 8 * 1024 * 1024
+
 class OpenFirenetFirmwareUpdate(CoordinatorEntity[OpenFirenetCoordinator], UpdateEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "firmware"
@@ -140,11 +153,16 @@ class OpenFirenetFirmwareUpdate(CoordinatorEntity[OpenFirenetCoordinator], Updat
         if device.get("ota_password_set") and not password:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="update_password_required")
 
+        variant = str(device.get("firmware_variant") or "standard").strip().lower()
+        if variant != "psram" and _psram_build_supported(device):
+            variant = "psram"
         self._attr_in_progress = True
         self._attr_update_percentage = None
         self.async_write_ha_state()
         try:
-            firmware = await download_verified_firmware(async_get_clientsession(self.hass), release["assets"])
+            firmware = await download_verified_firmware(
+                async_get_clientsession(self.hass), release["assets"], variant=variant
+            )
             slot = device.get("ota_slot_bytes") or 0
             if slot and len(firmware) > slot:
                 raise OtaError("update_slot_too_small", firmware=str(len(firmware)), slot=str(slot))
