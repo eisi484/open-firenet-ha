@@ -113,6 +113,100 @@ async def async_setup_entry(
         + [OpenFirenetSchedulePendingSensor(coordinator, entry, SCHEDULE_PENDING)]
     )
 
+    # Dynamic generic extension discovery for boolean/binary alerts
+    known_ext_bin_keys: set[tuple[str, str]] = set()
+
+    def _discover_binary_extensions() -> None:
+        new_entities: list[BinarySensorEntity] = []
+        extensions = coordinator.data.get("extensions")
+        if isinstance(extensions, dict):
+            for ext_id, ext_data in extensions.items():
+                if not isinstance(ext_data, dict):
+                    continue
+                # If legacy pellet sensor already handles pellet_low, skip duplicate
+                if ext_id == "pellet_level" and "pellet" in coordinator.data:
+                    continue
+                for val_key, val in ext_data.items():
+                    if val_key in ("enabled", "running", "healthy", "status"):
+                        continue
+                    if isinstance(val, bool):
+                        key_pair = (ext_id, val_key)
+                        if key_pair not in known_ext_bin_keys:
+                            known_ext_bin_keys.add(key_pair)
+                            new_entities.append(
+                                OpenFirenetExtensionBinarySensor(coordinator, entry, ext_id, val_key)
+                            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _discover_binary_extensions()
+    entry.async_on_unload(coordinator.async_add_listener(_discover_binary_extensions))
+
+
+def _infer_binary_metadata(ext_id: str, val_key: str) -> dict[str, Any]:
+    key = val_key.lower()
+    if "problem" in key or "error" in key or "fault" in key:
+        return {"device_class": BinarySensorDeviceClass.PROBLEM, "icon": "mdi:alert-circle"}
+    if "low" in key:
+        return {"device_class": BinarySensorDeviceClass.PROBLEM, "icon": "mdi:alert-circle-outline"}
+    if "motion" in key:
+        return {"device_class": BinarySensorDeviceClass.MOTION, "icon": "mdi:motion-sensor"}
+    if "door" in key or "lid" in key or "window" in key or "open" in key:
+        return {"device_class": BinarySensorDeviceClass.OPENING, "icon": "mdi:door"}
+    return {"device_class": None, "icon": "mdi:check-circle-outline"}
+
+
+class OpenFirenetExtensionBinarySensor(
+    CoordinatorEntity[OpenFirenetCoordinator], BinarySensorEntity
+):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: OpenFirenetCoordinator,
+        entry: ConfigEntry,
+        ext_id: str,
+        val_key: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._entry = entry
+        self._ext_id = ext_id
+        self._val_key = val_key
+
+        ext_title = ext_id.replace("_", " ").title()
+        val_title = val_key.replace("_", " ").title()
+        self._attr_name = f"{ext_title} {val_title}"
+        self._attr_unique_id = f"{entry.entry_id}_ext_bin_{ext_id}_{val_key}"
+
+        meta = _infer_binary_metadata(ext_id, val_key)
+        self._attr_device_class = meta.get("device_class")
+        self._attr_icon = meta.get("icon")
+
+    @property
+    def device_info(self) -> dict:
+        device = self.coordinator.data.get("device", {})
+        stove = self.coordinator.data.get("stove", {})
+        model_name = stove.get("model_name") or get_model_name(stove.get("model"))
+        return {
+            "identifiers": {(DOMAIN, self._entry.entry_id)},
+            "name": device.get("name", "Open Firenet"),
+            "manufacturer": "Open Firenet",
+            "model": f"RIKA {model_name}",
+            "sw_version": f"Firmware v{device.get('version', '2.0.0')} (MB {stove.get('mainboard_version') or '?'})",
+            "configuration_url": f"http://{self.coordinator.host}",
+        }
+
+    @property
+    def available(self) -> bool:
+        ext = self.coordinator.data.get("extensions", {}).get(self._ext_id)
+        if not isinstance(ext, dict):
+            return False
+        return bool(ext.get("enabled", False) and ext.get("running", False) and ext.get("healthy", False))
+
+    @property
+    def is_on(self) -> bool:
+        return bool(self.coordinator.data.get("extensions", {}).get(self._ext_id, {}).get(self._val_key, False))
+
 
 class OpenFirenetBinarySensor(
     CoordinatorEntity[OpenFirenetCoordinator], BinarySensorEntity

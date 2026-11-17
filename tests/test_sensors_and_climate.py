@@ -160,3 +160,49 @@ async def test_pellet_empty_binary_sensor_when_error_code_1(hass, bridge):
     assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_empty")).state == "on"
     assert hass.states.get(_entity_id(hass, entry, "binary_sensor", "pellet_low")).state == "on"
 
+
+async def test_generic_extension_sensors_dynamically_created(hass, bridge):
+    bridge.state["extensions"] = {
+        "ambient_sensor": {
+            "enabled": True,
+            "running": True,
+            "healthy": True,
+            "status": "ok",
+            "temperature_c": 22.4,
+            "humidity_percent": 55.0,
+            "alert": False,
+        }
+    }
+    entry = await _setup(hass, bridge)
+
+    temp_state = hass.states.get(_entity_id(hass, entry, "sensor", "ext_ambient_sensor_temperature_c"))
+    assert temp_state is not None
+    assert temp_state.state == "22.4"
+    assert temp_state.attributes.get("unit_of_measurement") == "°C"
+    assert temp_state.attributes.get("device_class") == "temperature"
+
+    hum_state = hass.states.get(_entity_id(hass, entry, "sensor", "ext_ambient_sensor_humidity_percent"))
+    assert hum_state is not None
+    assert hum_state.state == "55.0"
+    assert hum_state.attributes.get("unit_of_measurement") == "%"
+
+    alert_state = hass.states.get(_entity_id(hass, entry, "binary_sensor", "ext_bin_ambient_sensor_alert"))
+    assert alert_state is not None
+    assert alert_state.state == "off"
+
+
+async def test_generic_extension_unavailable_when_unhealthy(hass, bridge):
+    bridge.state["extensions"] = {
+        "faulty_sensor": {
+            "enabled": True,
+            "running": False,
+            "healthy": False,
+            "status": "sensor failed",
+            "distance_cm": 15.0,
+        }
+    }
+    entry = await _setup(hass, bridge)
+    sensor = hass.states.get(_entity_id(hass, entry, "sensor", "ext_faulty_sensor_distance_cm"))
+    assert sensor is not None
+    assert sensor.state == "unavailable"
+

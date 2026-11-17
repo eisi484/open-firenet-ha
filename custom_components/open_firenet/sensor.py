@@ -296,6 +296,146 @@ async def async_setup_entry(
 
     async_add_entities([OpenFirenetSensor(coordinator, entry, description) for description in SENSOR_TYPES if _offered(description)])
 
+    # Dynamic generic extension discovery from /api/state
+    known_ext_keys: set[tuple[str, str]] = set()
+
+    def _discover_extensions() -> None:
+        new_entities: list[SensorEntity] = []
+        extensions = coordinator.data.get("extensions")
+        if isinstance(extensions, dict):
+            for ext_id, ext_data in extensions.items():
+                if not isinstance(ext_data, dict):
+                    continue
+                # If legacy pellet sensor already handles pellet_level, skip duplicate keys
+                if ext_id == "pellet_level" and "pellet" in coordinator.data:
+                    continue
+                for val_key, val in ext_data.items():
+                    if val_key in ("enabled", "running", "healthy", "status"):
+                        continue
+                    if isinstance(val, bool):
+                        continue
+                    key_pair = (ext_id, val_key)
+                    if key_pair not in known_ext_keys:
+                        known_ext_keys.add(key_pair)
+                        new_entities.append(
+                            OpenFirenetExtensionSensor(coordinator, entry, ext_id, val_key)
+                        )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    _discover_extensions()
+    entry.async_on_unload(coordinator.async_add_listener(_discover_extensions))
+
+
+def _infer_sensor_metadata(ext_id: str, val_key: str) -> dict[str, Any]:
+    key = val_key.lower()
+    if "distance" in key or key.endswith("_cm") or key.endswith("_mm") or key.endswith("_m"):
+        unit = (
+            UnitOfLength.MILLIMETERS
+            if key.endswith("_mm")
+            else (UnitOfLength.METERS if key.endswith("_m") else UnitOfLength.CENTIMETERS)
+        )
+        return {
+            "device_class": SensorDeviceClass.DISTANCE,
+            "native_unit_of_measurement": unit,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:ruler",
+        }
+    if "weight" in key or "mass" in key or key.endswith("_kg") or key.endswith("_g"):
+        unit = UnitOfMass.GRAMS if key.endswith("_g") else UnitOfMass.KILOGRAMS
+        return {
+            "device_class": SensorDeviceClass.WEIGHT,
+            "native_unit_of_measurement": unit,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:weight-kilogram",
+        }
+    if "percent" in key or key.endswith("_pct") or "level" in key:
+        return {
+            "device_class": None,
+            "native_unit_of_measurement": PERCENTAGE,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:gauge",
+        }
+    if "temp" in key or key.endswith("_c"):
+        return {
+            "device_class": SensorDeviceClass.TEMPERATURE,
+            "native_unit_of_measurement": UnitOfTemperature.CELSIUS,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:thermometer",
+        }
+    if "humidity" in key:
+        return {
+            "device_class": SensorDeviceClass.HUMIDITY,
+            "native_unit_of_measurement": PERCENTAGE,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:water-percent",
+        }
+    if "pressure" in key or "hpa" in key:
+        return {
+            "device_class": SensorDeviceClass.PRESSURE,
+            "native_unit_of_measurement": "hPa",
+            "state_class": SensorStateClass.MEASUREMENT,
+            "icon": "mdi:gauge",
+        }
+    return {
+        "device_class": None,
+        "native_unit_of_measurement": None,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:information-outline",
+    }
+
+
+class OpenFirenetExtensionSensor(CoordinatorEntity[OpenFirenetCoordinator], SensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: OpenFirenetCoordinator,
+        entry: ConfigEntry,
+        ext_id: str,
+        val_key: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._entry = entry
+        self._ext_id = ext_id
+        self._val_key = val_key
+
+        ext_title = ext_id.replace("_", " ").title()
+        val_title = val_key.replace("_", " ").title()
+        self._attr_name = f"{ext_title} {val_title}"
+        self._attr_unique_id = f"{entry.entry_id}_ext_{ext_id}_{val_key}"
+
+        meta = _infer_sensor_metadata(ext_id, val_key)
+        self._attr_device_class = meta.get("device_class")
+        self._attr_native_unit_of_measurement = meta.get("native_unit_of_measurement")
+        self._attr_state_class = meta.get("state_class")
+        self._attr_icon = meta.get("icon")
+
+    @property
+    def device_info(self) -> dict:
+        device = self.coordinator.data.get("device", {})
+        stove = self.coordinator.data.get("stove", {})
+        model_name = stove.get("model_name") or get_model_name(stove.get("model"))
+        return {
+            "identifiers": {(DOMAIN, self._entry.entry_id)},
+            "name": device.get("name", "Open Firenet"),
+            "manufacturer": "Open Firenet",
+            "model": f"RIKA {model_name}",
+            "sw_version": f"Firmware v{device.get('version', '2.0.0')} (MB {stove.get('mainboard_version') or '?'})",
+            "configuration_url": f"http://{self.coordinator.host}",
+        }
+
+    @property
+    def available(self) -> bool:
+        ext = self.coordinator.data.get("extensions", {}).get(self._ext_id)
+        if not isinstance(ext, dict):
+            return False
+        return bool(ext.get("enabled", False) and ext.get("running", False) and ext.get("healthy", False))
+
+    @property
+    def native_value(self) -> Any:
+        return self.coordinator.data.get("extensions", {}).get(self._ext_id, {}).get(self._val_key)
+
 
 class OpenFirenetSensor(CoordinatorEntity[OpenFirenetCoordinator], SensorEntity):
     entity_description: OpenFirenetSensorEntityDescription
